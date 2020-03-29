@@ -36,11 +36,11 @@ library(sf)
 library(tmap)
 library(butteR)
 library(AMR)
-source("Functions/GIS_Project_Functions.R")
-source("Functions/Load_Audit.R")
-source("Functions/get_na_response_rates.R")
+source("functions/GIS_Project_Functions.R")
+source("functions/Load_Audit.R")
+source("functions/get_na_response_rates.R")
 
-day_to_run <- Sys.Date()
+day_to_run <- Sys.Date()-3
 write_csv_output <- c("yes","no")[1]
 
 #load data
@@ -197,97 +197,119 @@ df <- data %>% dplyr::filter(rowSums(data[pre_and_primary],na.rm = T) > 0 &
 df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says   the age range is pre paimary or 1-5 and class 6-10 or 11-12") %>% kable_styling(position = "center")
 ```
 
+### Start and end day is not same (education)
+```{r eval=TRUE, echo=FALSE, results='asis', warning=FALSE, messages=FALSE}
+df <- data %>% dplyr::mutate(
+  total_teacher = male_teachers_per_education_facility +
+         female_teachers_per_education_facility
+) %>% dplyr::filter(total_teacher > 10) %>% select(c("reported_date","X_uuid","male_teachers_per_education_facility",
+            "female_teachers_per_education_facility","total_teacher" ))
+
+df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says the number of teacher is greater than 50") %>% kable_styling(position = "center")
+
+```
+
 ### transportation
 ```{r eval=TRUE, echo=FALSE, results='asis'}
 
 df <- data %>% dplyr::filter(data$education_facilities_charging_fees_3 == "yesall" |
 data$education_facilities_charging_fees_3 == "yessome") %>% 
   dplyr::filter(education_facility_providing_transportation == "no") %>% 
-  dplyr::select(c("reported_date","X_uuid","education_facilities_charging_fees_3","education_facility_providing_transportation")
-  
-)
+  dplyr::select(c("reported_date","X_uuid","education_facilities_charging_fees_3",
+                  "education_facility_providing_transportation"))
+
 df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says they took transportation fee but they did not provide transportaion facility") %>% kable_styling(position = "center")
 ```
 ### all_fess
 ```{r eval=TRUE, echo=FALSE, results='asis'}
 
-all_frequency <- data %>% dplyr::select(contains("education_facilities_charging_fees_by_frequency")) %>%
-  dplyr::select(-contains("_other"))  %>% colnames()
+all_frequency <- data %>% dplyr::select(contains("education_facilities_charging_fees_by_frequency")) %>% dplyr::select(-contains("_other"))  %>% colnames()
+
 all_fees <- data %>% dplyr::select(starts_with("average_education_facility")) %>% colnames() 
 
-a2 <-data %>%  dplyr::mutate(fees_annually = if_else(tuition_education_facilities_charging_fees_by_frequency == "monthly", 
-                                                     as.integer(data$tuition_education_facilities_charging_fees*12) ,
-                                                     if_else(tuition_education_facilities_charging_fees_by_frequency == "quarterly",
-                                                             as.integer(data$tuition_education_facilities_charging_fees*4),
-                                                             as.integer(data$tuition_education_facilities_charging_fees), NULL))) %>% dplyr::select(
-                                                               c("reported_date","X_uuid","fees_annually")) # %>% dplyr::filter(fees_annually > 2000)
+a2 <-data %>%  dplyr::mutate(
+  fees_annually = if_else(tuition_education_facilities_charging_fees_by_frequency == "monthly",                                  as.integer(data$tuition_education_facilities_charging_fees*12) ,
+                          if_else(tuition_education_facilities_charging_fees_by_frequency == "quarterly",
+                                  as.integer(data$tuition_education_facilities_charging_fees*4),
+                                  as.integer(data$tuition_education_facilities_charging_fees), NULL))) %>% dplyr::select(c("reported_date","X_uuid","fees_annually")) 
 
 
-a3 <-data %>%  dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency3 == "monthly", 
-                                                     as.integer(data$average_education_facility_fees3*12) ,
-                                                     if_else(education_facilities_charging_fees_by_frequency3 == "quarterly",
-                                                             as.integer(data$average_education_facility_fees3*4),
-                                                             as.integer(data$average_education_facility_fees3), NULL))) %>% dplyr::select(
-                                                               c("reported_date","X_uuid","fees_annually"))
+a3 <-data %>%  dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency3 == "monthly", 
+                          as.integer(data$average_education_facility_fees3*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency3 == "quarterly",
+                                  as.integer(data$average_education_facility_fees3*4),
+                                  as.integer(data$average_education_facility_fees3), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
 
-a4 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency4 == "monthly", 
-                                                    as.integer(data$average_education_facility_fees4*12) ,
-                                                    if_else(education_facilities_charging_fees_by_frequency4 == "quarterly",
-                                                            as.integer(data$average_education_facility_fees4*4),
-                                                            as.integer(data$average_education_facility_fees4), NULL))) %>% dplyr::select(
-                                                              c("reported_date","X_uuid","fees_annually"))
+a4 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency4 == "monthly", 
+                          as.integer(data$average_education_facility_fees4*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency4 == "quarterly",
+                                  as.integer(data$average_education_facility_fees4*4),
+                                  as.integer(data$average_education_facility_fees4), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a5 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency5 == "monthly", 
-                                                    as.integer(data$average_education_facility_fees5*12) ,
-                                                    if_else(education_facilities_charging_fees_by_frequency5 == "quarterly",
-                                                            as.integer(data$average_education_facility_fees5*4),
-                                                            as.integer(data$average_education_facility_fees5), NULL))) %>% dplyr::select(
-                                                              c("reported_date","X_uuid","fees_annually"))
+a5 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency5 == "monthly", 
+                          as.integer(data$average_education_facility_fees5*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency5 == "quarterly",
+                                  as.integer(data$average_education_facility_fees5*4),
+                                  as.integer(data$average_education_facility_fees5), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a6 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency6 == "monthly", 
-                                                    as.integer(data$average_education_facility_fees6*12) ,
-                                                    if_else(education_facilities_charging_fees_by_frequency6 == "quarterly",
-                                                            as.integer(data$average_education_facility_fees6*4),
-                                                            as.integer(data$average_education_facility_fees6), NULL))) %>% dplyr::select(
-                                                              c("reported_date","X_uuid","fees_annually"))
+a6 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency6 == "monthly", 
+                          as.integer(data$average_education_facility_fees6*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency6 == "quarterly",
+                                  as.integer(data$average_education_facility_fees6*4),
+                                  as.integer(data$average_education_facility_fees6), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a7 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency7 == "monthly", 
-                                                    as.integer(data$average_education_facility_fees7*12) ,
-                                                    if_else(education_facilities_charging_fees_by_frequency7 == "quarterly",
-                                                            as.integer(data$average_education_facility_fees7*4),
-                                                            as.integer(data$average_education_facility_fees7), NULL))) %>% dplyr::select(
-                                                              c("reported_date","X_uuid","fees_annually"))
+a7 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency7 == "monthly", 
+                          as.integer(data$average_education_facility_fees7*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency7 == "quarterly",
+                                  as.integer(data$average_education_facility_fees7*4),
+                                  as.integer(data$average_education_facility_fees7), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a8 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency8 == "monthly", 
-                                                    as.integer(data$average_education_facility_fees8*12) ,
-                                                    if_else(education_facilities_charging_fees_by_frequency8 == "quarterly",
-                                                            as.integer(data$average_education_facility_fees8*4),
-                                                            as.integer(data$average_education_facility_fees8), NULL))) %>% dplyr::select(
-                                                              c("reported_date","X_uuid","fees_annually"))
+a8 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency8 == "monthly", 
+                          as.integer(data$average_education_facility_fees8*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency8 == "quarterly",
+                                  as.integer(data$average_education_facility_fees8*4),
+                                  as.integer(data$average_education_facility_fees8), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a9 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency9 == "monthly", 
-                                                    as.integer(data$average_education_facility_fees9*12) ,
-                                                    if_else(education_facilities_charging_fees_by_frequency9 == "quarterly",
-                                                            as.integer(data$average_education_facility_fees9*4),
-                                                            as.integer(data$average_education_facility_fees9), NULL))) %>% dplyr::select(
-                                                              c("reported_date","X_uuid","fees_annually"))
+a9 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency9 == "monthly", 
+                          as.integer(data$average_education_facility_fees9*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency9 == "quarterly",
+                                  as.integer(data$average_education_facility_fees9*4),
+                                  as.integer(data$average_education_facility_fees9), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a10 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency10 == "monthly", 
-                                                     as.integer(data$average_education_facility_fees10*12) ,
-                                                     if_else(education_facilities_charging_fees_by_frequency10 == "quarterly",
-                                                             as.integer(data$average_education_facility_fees10*4),
-                                                             as.integer(data$average_education_facility_fees10), NULL))) %>% dplyr::select(
-                                                               c("reported_date","X_uuid","fees_annually"))
+a10 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency10 == "monthly", 
+                          as.integer(data$average_education_facility_fees10*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency10 == "quarterly",
+                                  as.integer(data$average_education_facility_fees10*4),
+                                  as.integer(data$average_education_facility_fees10), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-a11 <-data %>% dplyr::mutate(fees_annually = if_else(education_facilities_charging_fees_by_frequency11 == "monthly", 
-                                                     as.integer(data$average_education_facility_fees11*12) ,
-                                                     if_else(education_facilities_charging_fees_by_frequency11 == "quarterly",
-                                                             as.integer(data$average_education_facility_fees11*4),
-                                                             as.integer(data$average_education_facility_fees11), NULL))) %>% dplyr::select(
-                                                               c("reported_date","X_uuid","fees_annually"))
+a11 <-data %>% dplyr::mutate(
+  fees_annually = if_else(education_facilities_charging_fees_by_frequency11 == "monthly", 
+                          as.integer(data$average_education_facility_fees11*12) ,
+                          if_else(education_facilities_charging_fees_by_frequency11 == "quarterly",
+                                  as.integer(data$average_education_facility_fees11*4),
+                                  as.integer(data$average_education_facility_fees11), NULL))) %>% dplyr::select(
+                                    c("reported_date","X_uuid","fees_annually"))
 
-df <- rbind(a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) %>% dplyr::filter(!is.na(fees_annually))
+df <- rbind(a2,a3,a4,a5,a6,a7,a8,a9,a10,a11) %>% dplyr::filter(!is.na(fees_annually)) %>% dplyr::filter(
+  fees_annually > 1000
+)
 
 unique_x_uuid <- df$X_uuid %>% unique()
 cols_needed<-c("X_uuid","reported_date")
@@ -296,7 +318,7 @@ df2  <- data %>% dplyr::filter(X_uuid %in% unique_x_uuid)
 df3 <- df2[cols_needed]
 
 
-df3 %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says the fees of any facility is greater than 2000") %>% kable_styling(position = "center")
+df3 %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says the fees of any facility is greater than 1000") %>% kable_styling(position = "center")
 
 ```
 
