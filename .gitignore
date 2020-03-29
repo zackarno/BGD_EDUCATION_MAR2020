@@ -3,10 +3,10 @@
 .RData
 .Ruserdata
 
-/Output/*
+/output/*
 
-/Inputs/*
+/inputs/*
 /DAP/*
 
-!/Inputs/.gitkeep
-!/Output/.gitkeep
+!/inputs/.gitkeep
+!/output/.gitkeep
