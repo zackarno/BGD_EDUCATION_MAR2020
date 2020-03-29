@@ -49,11 +49,8 @@ write_csv_output <- c("yes","no")[1]
                  na.strings = c(""," ", "n/a",NA)) %>% dplyr::mutate(
                    consent = "yes"
                  )
-
 date_log_path <- "output/01_date_logger/date_logger.csv"
 
-
-buffer <-25
 
 ############################date log##############################
 
@@ -93,7 +90,7 @@ survey_by_date <- data %>% dplyr::group_by(reported_date) %>% dplyr::summarise(
 
 survey_by_date %>% kable( longtable = T, booktabs = T, linesep = "",caption= "Total number of survey by date ") %>% kable_styling(position = "center")
 
-complete_by_upazila %>% kable( longtable = T, booktabs = T, linesep = "",caption= "Tracking sheet (NA means the points fall outside the camp boundary) ") %>% kable_styling(position = "center")
+complete_by_upazila %>% kable( longtable = T, booktabs = T, linesep = "",caption= "Tracking sheet") %>% kable_styling(position = "center")
 ```
 
 
@@ -147,12 +144,8 @@ The mean time for a completed questionaire so far is **`r mean(htdf$duration_min
 The median time for a completed questionaire so far is **`r median(htdf$duration_minutes, na.rm=TRUE)`**.
 
 
-
 ```{r eval=TRUE, echo=FALSE, results='asis'}
-
-# quick_surveys<-htdf[htdf$duration_minutes< mindur,]
-
-mindur <- 25
+mindur <- 20
 quick_surveys<-htdf %>% filter(duration_minutes < mindur)
 
 quick_survey_daily<-quick_surveys %>% group_by(reported_date, enumerator_id) %>% 
@@ -182,7 +175,7 @@ duration_by_enumerator%>% kable( longtable = T, booktabs = T, linesep = "",capti
 
 ```
 
-### ager_range
+## Age range
 ```{r eval=TRUE, echo=FALSE, results='asis'}
 pre_and_primary <- c("age_ranges.pre.primary","age_ranges.class_1.5")
 
@@ -194,22 +187,22 @@ df <- data %>% dplyr::filter(rowSums(data[pre_and_primary],na.rm = T) > 0 &
                      dplyr::select(c("reported_date","X_uuid","age_ranges.pre.primary",
                                      "age_ranges.class_1.5","age_ranges.class_6.10",
                                      "age_ranges.class_11.12"))
-df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says   the age range is pre paimary or 1-5 and class 6-10 or 11-12") %>% kable_styling(position = "center")
+df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says the age range is (pre paimary and class 6-10) or (1-5 and 11-12) at a time") %>% kable_styling(position = "center")
 ```
 
-### Start and end day is not same (education)
+## Number of teacher
 ```{r eval=TRUE, echo=FALSE, results='asis', warning=FALSE, messages=FALSE}
 df <- data %>% dplyr::mutate(
   total_teacher = male_teachers_per_education_facility +
          female_teachers_per_education_facility
-) %>% dplyr::filter(total_teacher > 10) %>% select(c("reported_date","X_uuid","male_teachers_per_education_facility",
+) %>% dplyr::filter(total_teacher > 50) %>% select(c("reported_date","X_uuid","male_teachers_per_education_facility",
             "female_teachers_per_education_facility","total_teacher" ))
 
 df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says the number of teacher is greater than 50") %>% kable_styling(position = "center")
 
 ```
 
-### transportation
+## Transportation
 ```{r eval=TRUE, echo=FALSE, results='asis'}
 
 df <- data %>% dplyr::filter(data$education_facilities_charging_fees_3 == "yesall" |
@@ -220,7 +213,8 @@ data$education_facilities_charging_fees_3 == "yessome") %>%
 
 df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says they took transportation fee but they did not provide transportaion facility") %>% kable_styling(position = "center")
 ```
-### all_fess
+
+## All fess
 ```{r eval=TRUE, echo=FALSE, results='asis'}
 
 all_frequency <- data %>% dplyr::select(contains("education_facilities_charging_fees_by_frequency")) %>% dplyr::select(-contains("_other"))  %>% colnames()
@@ -322,7 +316,7 @@ df3 %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in whi
 
 ```
 
-## Enumerator(education)
+## Enumerators Statistics
 ```{r warning = FALSE, message=FALSE}
 #total col 26+5 =31
 col_name_enu_multiple <- data %>% dplyr::select(dplyr::ends_with(".dont_know")) %>% colnames()
@@ -350,7 +344,7 @@ enu_records_dont_know <- df %>% dplyr::filter(rowsum_dont_know_enu > 15 ) %>% se
 enu_records_dont_know %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys that enumerators record “don’t know” for over half of the questions") %>% kable_styling(position = "center")
 ```
 
-### Start and end day is not same (education)
+## Start and end day is not same
 ```{r eval=TRUE, echo=FALSE, results='asis', warning=FALSE, messages=FALSE}
 start_end_date <- data %>%  select(survey_start,end_survey,reported_date,X_uuid,enumerator_id) %>% mutate(
   start_date = substr(data$survey_start,1,10),
@@ -364,7 +358,7 @@ not_same_date %>% kable( longtable = T, booktabs = T, linesep = "",caption= "Sur
 
 ```
 
-### Check NAs
+## Check NAs
 NA response rates written to shared dropbox folder
 ```{r eval=TRUE, echo=FALSE, results='asis', warning=FALSE, messages=FALSE}
 
@@ -373,14 +367,13 @@ dropbox_aux_na_path<-paste0(dropbox_aux, str_replace_all(ymd(day_to_run),"-","_"
 
 data_na<-get_na_response_rates(data)
 
-
 if(write_csv_output == "yes"){
 write.csv( data_na,paste0(dropbox_aux_na_path, "_NA_response.csv"))
 }
 
 ```
 
-### Other response
+## Other response
 Other responses are written to shared dropbox folder
 ```{r eval=TRUE, echo=FALSE, results='asis', warning=FALSE, messages=FALSE}
 dropbox_path <-  "C:\\Users\\MEHEDI\\Dropbox\\REACH_BGD\\REACH\\Ongoing\\70XXX - UNICEF (Host Community Education)\\04_daily_monitoring\\01_facility_assessment\\01_daily_data\\"
