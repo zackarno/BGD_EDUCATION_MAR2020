@@ -17,25 +17,18 @@ knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE)
 
 library(dplyr)
-library(sf)
 library(HighFrequencyChecks)
 library(srvyr)
 library(anytime)
 library(readr)
 library(stringr)
-library(ggplot2)
 library(lubridate)
 library(rgdal)
-library(HighFrequencyChecks)
 library(kableExtra)
 library(gsubfn)
 library(stringi)
-library(data.table)
-library(sf)
-# library(GISutils)
-library(tmap)
 library(butteR)
-library(AMR)
+
 source("functions/GIS_Project_Functions.R")
 source("functions/Load_Audit.R")
 source("functions/get_na_response_rates.R")
@@ -214,7 +207,7 @@ data$education_facilities_charging_fees_3 == "yessome") %>%
 df %>% kable( longtable = T, booktabs = T, linesep = "",caption="Surveys in which respondent says they took transportation fee but they did not provide transportaion facility") %>% kable_styling(position = "center")
 ```
 
-## All fess
+## All fees
 ```{r eval=TRUE, echo=FALSE, results='asis'}
 
 all_frequency <- data %>% dplyr::select(contains("education_facilities_charging_fees_by_frequency")) %>% dplyr::select(-contains("_other"))  %>% colnames()
